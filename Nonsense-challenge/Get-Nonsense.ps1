@@ -16,6 +16,8 @@ Takes a positive integer that defines a number of documents to generate.
 .PARAMETER Markdown
 Switch to generate a randomized markdown document.
 .LINK
+https://github.com/jabberwoockey/IronScripter/tree/master/Nonsense-challenge
+.LINK
 https://ironscripter.us/a-powershell-nonsense-challenge/
 .LINK
 Get-Random
