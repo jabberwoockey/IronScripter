@@ -59,55 +59,71 @@ function Get-Word {
     Write-Verbose 'Generating a new word'
     Test-Value -Value $WordLen
     [string]$NSWord = ''
+    [string]$prevLetter = ''
     $arr = @(97..122)
+    $vowels = @("a","e","i","o","u")
     for ([int]$i = 0; $i -lt $WordLen; $i++) {
-        $letter = [char](Get-Random -InputObject $arr)
+    [string]$letter = [char](Get-Random -InputObject $arr)
+        # Looking for more vowels to make it look more like a real word:
+        if (($i -gt 1) -and (($letter -eq $prevLetter) -or 
+             ( ($NSWord[$i-2] -notin $vowels) -and ($NSWord[$i-1] -notin $vowels) ) )) {
+            while (($letter -eq $prevLetter) -or ($letter -notin $vowels)) {
+                $letter = [char](Get-Random -InputObject $vowels)
+            }
+        } else {
+            while (($letter -eq $prevLetter)) {
+                [string]$letter = [char](Get-Random -InputObject $arr)
+            }
+        }
+        $prevLetter = $letter
+        # Adding diacritics and normalizing their number,
+        # I just don't like when there are too many of them:
         switch ($letter) {
             'a' {
                 if (Get-Random -Minimum 0 -Maximum 3) {
-                    $letter = [char](Get-Random -InputObject @(224..229))
                     $NSWord += $letter    
                 } else {
+                    $letter = [char](Get-Random -InputObject @(224..229))
                     $NSWord += $letter
                 }
             }
             'e' {
                 if (Get-Random -Minimum 0 -Maximum 3) {
-                    $letter = [char](Get-Random -InputObject @(232..235))
                     $NSWord += $letter    
                 } else {
+                    $letter = [char](Get-Random -InputObject @(232..235))
                     $NSWord += $letter
                 }
             }
             'i' {
                 if (Get-Random -Minimum 0 -Maximum 3) {
-                    $letter = [char](Get-Random -InputObject @(236..239))
                     $NSWord += $letter    
                 } else {
+                    $letter = [char](Get-Random -InputObject @(236..239))
                     $NSWord += $letter
                 }
             }
             'o' {
                 if (Get-Random -Minimum 0 -Maximum 3) {
-                    $letter = [char](Get-Random -InputObject @(242..246))
                     $NSWord += $letter    
                 } else {
+                    $letter = [char](Get-Random -InputObject @(242..246))
                     $NSWord += $letter
                 }
             }
             'u' {
                 if (Get-Random -Minimum 0 -Maximum 3) {
-                    $letter = [char](Get-Random -InputObject @(249..252))
                     $NSWord += $letter    
                 } else {
+                    $letter = [char](Get-Random -InputObject @(249..252))
                     $NSWord += $letter
                 }
             }
             'y' {
                 if (Get-Random -Minimum 0 -Maximum 3) {
-                    $letter = [char](Get-Random -InputObject @(253, 255))
                     $NSWord += $letter    
                 } else {
+                    $letter = [char](Get-Random -InputObject @(253, 255))
                     $NSWord += $letter
                 }
             }
@@ -198,19 +214,32 @@ function Get-Markdown {
     }
 
     function Get-MDParagraph {
-        $MDParagraph = $(Get-Random -InputObject @("## ","### ", "#### ")) `
+        $MDParagraph = $(Get-Random -InputObject @("## ","### ", "#### ", "##### ")) `
             + $(Get-MDTitle) + "`n`n"
         $MDParagraph += $(Get-Paragraph $(Get-Random -Minimum 2 -Maximum 10)) + "`n`n"
+        if (-not (Get-Random -Minimum 0 -Maximum 3)) {
+            $MDParagraph += "---`n`n"
+        }
         return $MDParagraph
     }
 
     function Get-MDList {
         $MDList = ""
-        for ([int]$i; $i -lt $(Get-Random -Minimum 5 -Maximum 11); $i++) {
-            if (Get-Random -Minimum 0 -Maximum 2) {
-                $MDList += '* ' + $(Get-Sentence 1) + "`n`n"
+        if (Get-Random -Minimum 0 -Maximum 2) {
+            $ordered = $true
+        } else {
+            $ordered = $false
+        }
+        for ([int]$i = 1; $i -lt $(Get-Random -Minimum 6 -Maximum 12); $i++) {
+            if ($ordered) {
+                $marker = '{0}. ' -f $i
             } else {
-                $MDList += '* ' + $(Get-Sentence $(Get-Random -Minimum 3 -Maximum 7)) + "`n`n"
+                $marker = '* '
+            }
+            if (Get-Random -Minimum 0 -Maximum 2) {
+                $MDList += $marker + $(Get-Sentence 1) + "`n`n"
+            } else {
+                $MDList += $marker + $(Get-Sentence $(Get-Random -Minimum 3 -Maximum 7)) + "`n`n"
             }
         }
         return $MDList
@@ -219,12 +248,15 @@ function Get-Markdown {
     [int]$MDnumber = $(Get-Random -Minimum 10 -Maximum 21)
     [string]$outMD = ''
     $outMD += '# ' + $(Get-MDTitle) + "`n`n"
+    $prevList = $false
 
     for ([int]$i = 0; $i -le $MDnumber; $i++) {
-        if (Get-Random -Minimum 0 -Maximum 2) {
+        if ($prevList -or (Get-Random -Minimum 0 -Maximum 3)) {
             $outMD += $(Get-MDParagraph)
+            $prevList = $false
         } else {
             $outMD += $(Get-MDList)
+            $prevList = $true
         }
     }
     return $outMD
@@ -249,6 +281,7 @@ elseif ($PSBoundParameters.ContainsKey('Markdown')) {
     Get-Markdown
 }
 else {
-    Write-Error -ErrorAction Stop `
-    -Message "It doesn't work that way, try: help .\${ScriptName} -ShowWindow"
+    Write-Output ("Usage:`n.\${ScriptName} -Word <Int32> | -Sentence <Int32>" + `
+    " | -Paragraph <Int32> | -Document <Int32> | -DocSet <Int32>" + `
+    " | -Markdown")
 }
