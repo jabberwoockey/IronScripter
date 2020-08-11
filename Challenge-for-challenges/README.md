@@ -14,7 +14,7 @@ To get N of the newest challenges:
 
 * `Get-WPinfo.ps1 -Newest 10`
 
-To generate HTML file with the newest challenges:
+To generate an HTML file with the newest challenges:
 
 * `Get-WPinfo.ps1 -Newest 10 -Html`
 
