@@ -1,3 +1,3 @@
-#### Solutions for Iron Scripter chalenges
+#### Solutions for Iron Scripter challenges
 
 https://ironscripter.us/
